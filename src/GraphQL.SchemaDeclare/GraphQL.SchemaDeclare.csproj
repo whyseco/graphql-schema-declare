@@ -9,7 +9,7 @@
     <RepositoryUrl>https://github.com/whyseco/graphql-schema-declare</RepositoryUrl>
     <PackageLicenseUrl>https://github.com/whyseco/graphql-schema-declare/blob/master/LICENSE</PackageLicenseUrl>
     <Copyright />
-    <Authors>Workshop2</Authors>
+    <Authors>Yann ROBIN</Authors>
     <PackageProjectUrl>https://github.com/whyseco/graphql-schema-declare</PackageProjectUrl>
     <!-- Optional: Publish the repository URL in the built .nupkg (in the NuSpec <Repository> element) -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
