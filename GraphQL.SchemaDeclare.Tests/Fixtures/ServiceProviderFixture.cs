@@ -11,7 +11,7 @@ namespace GraphQL.SchemaDeclare.Tests.Fixtures
         public ServiceProviderFixture()
         {
             var serviceCollection = new ServiceCollection();
-            serviceCollection.AddGraphQLSchemaDeclareService(_ => _.AddNullableInfo = true);
+            serviceCollection.AddGraphQLSchemaDeclareService();
             ServiceProvider = serviceCollection.BuildServiceProvider();
         }
     }

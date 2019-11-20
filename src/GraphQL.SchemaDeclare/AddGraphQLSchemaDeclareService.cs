@@ -34,6 +34,8 @@ namespace GraphQL.SchemaDeclare
                     return TypeToGraphTypeTransformerOptions;
                 });
             }
+            else
+                services.AddSingleton<GraphQL.SchemaDeclare.GenerationServices.TypeToGraphTypeTransformerOptions>();
         }
     }
 }
