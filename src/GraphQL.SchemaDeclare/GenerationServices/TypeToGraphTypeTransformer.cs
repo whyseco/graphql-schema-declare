@@ -90,7 +90,10 @@ namespace GraphQL.SchemaDeclare.GenerationServices
 			{
 				var gType = typeof(ListGraphType<>);
 				var clrType = realType.IsArray ? realType.GetElementType() : realType.GenericTypeArguments.First();
-				var graphType = GraphTypeTypeRegistry.Get(clrType);
+
+                realType = this.GetRealType(clrType);
+
+                var graphType = GraphTypeTypeRegistry.Get(realType);
 
 				if (options.AddNullableInfo && !this.IsTypeNullable(clrType, clrType))
 				{
