@@ -1,5 +1,7 @@
 ﻿using GraphQL.SchemaDeclare.GenerationServices;
+using GraphQL.SchemaDeclare.Tests.Fixtures;
 using GraphQL.Types;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -11,8 +13,15 @@ using Xunit;
 
 namespace GraphQL.SchemaDeclare.Tests
 {
-	public class ExpressionToFieldInfoGeneratorTests
-	{
+	public class ExpressionToFieldInfoGeneratorTests: IClassFixture<ServiceProviderFixture>
+    {
+        private ServiceProvider serviceProvider;
+
+        public ExpressionToFieldInfoGeneratorTests(ServiceProviderFixture fixture)
+        {
+            this.serviceProvider = fixture.ServiceProvider;
+        }
+
 		public string Display([Required]string s)
 		{
 			return s;
@@ -21,9 +30,9 @@ namespace GraphQL.SchemaDeclare.Tests
 		[Fact]
 		void WhenGeneratingMethodWithRequiredInputThenNotNullableGraphTypeAreGenerated()
 		{
-			var generator = new ExpressionToFieldInfoGenerator(new TypeToGraphTypeTransformer(), new TypeToGraphTypeTransformerOptions());
+            var generator = this.serviceProvider.GetRequiredService<IExpressionToFieldInfoGenerator>();
 
-			Expression<Func<ExpressionToFieldInfoGeneratorTests, string>> methodCall = (s) => s.Display(default);
+            Expression<Func<ExpressionToFieldInfoGeneratorTests, string>> methodCall = (s) => s.Display(default);
 
 			var fieldType = generator.FromExpression(methodCall, typeof(ExpressionToFieldInfoGeneratorTests));
 
