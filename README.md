@@ -112,20 +112,12 @@ Example :
 public void ConfigureServices(IServiceCollection services)
 {
 	// Register 
-	services.AddSingleton<GraphQL.IDependencyResolver>(s =>  new GraphQL.FuncDependencyResolver(type =>
-		{
-			var accessor = s.GetRequiredService<IHttpContextAccessor>();
-			return accessor.HttpContext.RequestServices.GetRequiredService(type);
-		}));
-	services.AddSingleton<GraphQL.SchemaDeclare.GenerationServices.IExpressionToFieldInfoGenerator,
-			GraphQL.SchemaDeclare.GenerationServices.ExpressionToFieldInfoGenerator>();
-	services.AddSingleton<GraphQL.SchemaDeclare.GenerationServices.IFieldInfoToFieldTypeTransformer,
-			GraphQL.SchemaDeclare.GenerationServices.FieldInfoToFieldTypeTransformer>();
-	services.AddSingleton<GraphQL.SchemaDeclare.GenerationServices.ITypeToGraphTypeTransformer,
-			GraphQL.SchemaDeclare.GenerationServices.TypeToGraphTypeTransformer>();
-	services.AddSingleton<GraphQL.SchemaDeclare.GenerationServices.TypeToGraphTypeTransformerOptions>();
-	services.AddSingleton<GraphQL.SchemaDeclare.Resolvers.IFieldInfoResolver,
-			GraphQL.SchemaDeclare.Resolvers.FieldInfoResolver>();
+	serviceCollection.AddGraphQLSchemaDeclareService();
+
+  // By default the Type to GraphType transformer option's AddNullableInfo is set to True
+  // You can set its value to False by passing it to service declaration:
+  // serviceCollection.AddGraphQLSchemaDeclareService(_ => _.AddNullableInfo = false);
+
 }
 
 public virtual void Configure(IApplicationBuilder app, IWebHostEnvironment env, Microsoft.Extensions.Logging.ILoggerFactory loggerFactory)
