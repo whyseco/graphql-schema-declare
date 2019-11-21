@@ -114,10 +114,9 @@ public void ConfigureServices(IServiceCollection services)
 	// Register 
 	serviceCollection.AddGraphQLSchemaDeclareService();
 
-  // You can set "Type to GraphType transformer option" (AddNullableInfo) to False
-  // by passing it to service declaration:
+  // By default the Type to GraphType transformer option's AddNullableInfo is set to True
+  // You can set its value to False by passing it to service declaration:
   // serviceCollection.AddGraphQLSchemaDeclareService(_ => _.AddNullableInfo = false);
-  // By default it's set to True
 
 }
 
