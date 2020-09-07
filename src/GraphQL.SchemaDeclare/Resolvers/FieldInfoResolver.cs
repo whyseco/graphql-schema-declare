@@ -11,14 +11,14 @@ namespace GraphQL.SchemaDeclare.Resolvers
 {
 	public class FieldInfoResolver : IFieldInfoResolver
 	{
-		private readonly IDependencyResolver dependencyResolver;
+		private readonly IServiceProvider serviceProvider;
 
-		public FieldInfoResolver(IDependencyResolver dependencyResolver)
+		public FieldInfoResolver(IServiceProvider serviceProvider)
 		{
-			this.dependencyResolver = dependencyResolver;
+			this.serviceProvider = serviceProvider;
 		}
 
-		private object GetArgumentValueFromParameterInfo(ResolveFieldContext<object> context, System.Reflection.ParameterInfo parameter)
+		private object GetArgumentValueFromParameterInfo(IResolveFieldContext context, System.Reflection.ParameterInfo parameter)
 		{
 			if (context.Arguments is null)
 			{
@@ -39,7 +39,7 @@ namespace GraphQL.SchemaDeclare.Resolvers
 			return value;
 		}
 
-		private object[] GetParametersValue(ResolveFieldContext<object> context, System.Reflection.MethodInfo methodInfo)
+		private object[] GetParametersValue(IResolveFieldContext context, System.Reflection.MethodInfo methodInfo)
 		{
 			var list = new List<object>();
 			foreach (var parameter in methodInfo.GetParameters())
@@ -53,11 +53,11 @@ namespace GraphQL.SchemaDeclare.Resolvers
 
 		protected virtual object GetController(IGraphType graphType, FieldInfo fieldInfo)
 		{
-			var canUseDependencyResolver = this.dependencyResolver != null;
+			var canUseDependencyResolver = this.serviceProvider != null;
 
 			if (canUseDependencyResolver)
 			{
-				return this.dependencyResolver.Resolve(fieldInfo.ControllerType);
+				return this.serviceProvider.GetService(fieldInfo.ControllerType);
 			}
 			return Activator.CreateInstance(fieldInfo.ControllerType);
 		}
@@ -69,9 +69,9 @@ namespace GraphQL.SchemaDeclare.Resolvers
 			return awaitable.GetAwaiter().GetResult();
 		}
 
-		protected virtual Func<ResolveFieldContext<object>, Task<object>> GenerateFunctionResolveAsync(IGraphType graphType, FieldInfo fieldInfo)
+		protected virtual Func<IResolveFieldContext, Task<object>> GenerateFunctionResolveAsync(IGraphType graphType, FieldInfo fieldInfo)
 		{
-			return async (ResolveFieldContext<object> context) =>
+			return async (IResolveFieldContext context) =>
 			{
 				var controller = this.GetController(graphType, fieldInfo);
 
@@ -81,9 +81,9 @@ namespace GraphQL.SchemaDeclare.Resolvers
 			};
 		}
 
-		protected virtual Func<ResolveFieldContext<object>, object> GenerateFunctionResolve(IGraphType graphType, FieldInfo fieldInfo)
+		protected virtual Func<IResolveFieldContext, object> GenerateFunctionResolve(IGraphType graphType, FieldInfo fieldInfo)
 		{
-			return (ResolveFieldContext<object> context) =>
+			return (IResolveFieldContext context) =>
 			{
 				var controller = this.GetController(graphType, fieldInfo);
 

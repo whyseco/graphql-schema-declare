@@ -11,11 +11,6 @@ namespace GraphQL.SchemaDeclare
     {
         public static void AddGraphQLSchemaDeclareService(this IServiceCollection services, Action<TypeToGraphTypeTransformerOptions> setTypeToGraphTypeOptions = null)
         {
-            services.AddSingleton<GraphQL.IDependencyResolver>(s => new GraphQL.FuncDependencyResolver(type =>
-            {
-                var accessor = s.GetRequiredService<IHttpContextAccessor>();
-                return accessor.HttpContext.RequestServices.GetRequiredService(type);
-            }));
             services.AddSingleton<GraphQL.SchemaDeclare.GenerationServices.IExpressionToFieldInfoGenerator,
                     GraphQL.SchemaDeclare.GenerationServices.ExpressionToFieldInfoGenerator>();
             services.AddSingleton<GraphQL.SchemaDeclare.GenerationServices.IFieldInfoToFieldTypeTransformer,

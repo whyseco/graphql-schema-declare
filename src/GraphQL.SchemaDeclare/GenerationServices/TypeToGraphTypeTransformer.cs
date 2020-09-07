@@ -15,8 +15,8 @@ namespace GraphQL.SchemaDeclare.GenerationServices
 	{
 		protected bool IsTypeNullable(Type rootType, Type realType)
 		{
-			var isRootTypeANullable = rootType.IsNullable();
-			var isRealTypeNullable = !realType.IsValueType || realType.IsNullable();
+			var isRootTypeANullable = this.IsNullable(rootType);
+			var isRealTypeNullable = !realType.IsValueType || this.IsNullable(realType);
 			var isNullable = isRootTypeANullable || isRealTypeNullable;
 
 			return isNullable;
@@ -73,9 +73,14 @@ namespace GraphQL.SchemaDeclare.GenerationServices
 			return graphType;
 		}
 
+		protected bool IsNullable(Type type)
+		{
+			return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+		}
+
 		protected Type GetRealType(Type originType)
 		{
-			if (originType.IsNullable())
+			if (this.IsNullable(originType))
 				originType = originType.GenericTypeArguments.First();
 			if (originType.IsGenericType && originType.GetGenericTypeDefinition() == typeof(Task<>))
 				originType = originType.GenericTypeArguments.First();

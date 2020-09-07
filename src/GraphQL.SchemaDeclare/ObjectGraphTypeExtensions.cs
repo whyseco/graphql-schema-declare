@@ -1,6 +1,7 @@
 ﻿using GraphQL.SchemaDeclare.GenerationServices;
 using GraphQL.SchemaDeclare.Resolvers;
 using GraphQL.Types;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -9,17 +10,17 @@ namespace GraphQL.SchemaDeclare
 {
 	public static class ObjectGraphTypeExtensions
 	{
-		public static IDependencyResolver DependencyResolver { get; set; }
+		public static IServiceProvider ServiceProvider { get; set; }
 
 		private static ExpressionToFieldTypeGenerator ExpressionToFieldTypeGenerator { get {
-				if (DependencyResolver is null)
+				if (ServiceProvider is null)
 				{
 					return new ExpressionToFieldTypeGenerator(
 						new ExpressionToFieldInfoGenerator(new TypeToGraphTypeTransformer(), new TypeToGraphTypeTransformerOptions()),
 						new FieldInfoToFieldTypeTransformer(),
-						new FieldInfoResolver(DependencyResolver));
+						new FieldInfoResolver(ServiceProvider));
 				}
-				return DependencyResolver.Resolve<ExpressionToFieldTypeGenerator>();
+				return ServiceProvider.GetRequiredService<ExpressionToFieldTypeGenerator>();
 			}
 		}
 
