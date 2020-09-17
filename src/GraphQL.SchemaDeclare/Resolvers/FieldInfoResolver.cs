@@ -11,13 +11,6 @@ namespace GraphQL.SchemaDeclare.Resolvers
 {
 	public class FieldInfoResolver : IFieldInfoResolver
 	{
-		private readonly IServiceProvider serviceProvider;
-
-		public FieldInfoResolver(IServiceProvider serviceProvider)
-		{
-			this.serviceProvider = serviceProvider;
-		}
-
 		private object GetArgumentValueFromParameterInfo(IResolveFieldContext context, System.Reflection.ParameterInfo parameter)
 		{
 			if (context.Arguments is null)
@@ -51,13 +44,13 @@ namespace GraphQL.SchemaDeclare.Resolvers
 			return list.ToArray();
 		}
 
-		protected virtual object GetController(IGraphType graphType, FieldInfo fieldInfo)
+		protected virtual object GetController(IResolveFieldContext context, IGraphType graphType, FieldInfo fieldInfo)
 		{
-			var canUseDependencyResolver = this.serviceProvider != null;
+			var canUseDependencyResolver = context.RequestServices != null;
 
 			if (canUseDependencyResolver)
 			{
-				return this.serviceProvider.GetService(fieldInfo.ControllerType);
+				return context.RequestServices.GetService(fieldInfo.ControllerType);
 			}
 			return Activator.CreateInstance(fieldInfo.ControllerType);
 		}
@@ -73,7 +66,7 @@ namespace GraphQL.SchemaDeclare.Resolvers
 		{
 			return async (IResolveFieldContext context) =>
 			{
-				var controller = this.GetController(graphType, fieldInfo);
+				var controller = this.GetController(context, graphType, fieldInfo);
 
 				var objects = this.GetParametersValue(context, fieldInfo.Action);
 
@@ -85,7 +78,7 @@ namespace GraphQL.SchemaDeclare.Resolvers
 		{
 			return (IResolveFieldContext context) =>
 			{
-				var controller = this.GetController(graphType, fieldInfo);
+				var controller = this.GetController(context, graphType, fieldInfo);
 
 				var objects = this.GetParametersValue(context, fieldInfo.Action);
 

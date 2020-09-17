@@ -18,7 +18,7 @@ namespace GraphQL.SchemaDeclare
 					return new ExpressionToFieldTypeGenerator(
 						new ExpressionToFieldInfoGenerator(new TypeToGraphTypeTransformer(), new TypeToGraphTypeTransformerOptions()),
 						new FieldInfoToFieldTypeTransformer(),
-						new FieldInfoResolver(ServiceProvider));
+						new FieldInfoResolver());
 				}
 				return ServiceProvider.GetRequiredService<ExpressionToFieldTypeGenerator>();
 			}
