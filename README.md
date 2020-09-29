@@ -123,7 +123,7 @@ public void ConfigureServices(IServiceCollection services)
 public virtual void Configure(IApplicationBuilder app, IWebHostEnvironment env, Microsoft.Extensions.Logging.ILoggerFactory loggerFactory)
 {
 	// Set DependencyResolver
-	GraphQL.SchemaDeclare.ObjectGraphTypeExtensions.DependencyResolver = app.ApplicationServices.GetRequiredService<GraphQL.IDependencyResolver>();
+	GraphQL.SchemaDeclare.ObjectGraphTypeExtensions.ServiceProvider = app.ApplicationServices;
 }
 ```
 
