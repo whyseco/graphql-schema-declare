@@ -20,6 +20,8 @@ namespace GraphQL.SchemaDeclare
             services.AddSingleton<GraphQL.SchemaDeclare.Resolvers.IFieldInfoResolver,
                     GraphQL.SchemaDeclare.Resolvers.FieldInfoResolver>();
 
+            services.AddSingleton<ExpressionToFieldTypeGenerator>();
+
             if (setTypeToGraphTypeOptions != null)
             {
                 services.AddSingleton(s =>
