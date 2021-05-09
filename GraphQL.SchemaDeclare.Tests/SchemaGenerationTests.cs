@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GraphQL.Execution;
 using Xunit;
 
 namespace GraphQL.SchemaDeclare.Tests
@@ -42,13 +43,13 @@ namespace GraphQL.SchemaDeclare.Tests
 		}
 	}
 
-	public class TestSchema : Schema
-	{
-		public TestSchema()
-		{
-			Query = new TestQuery();
-		}
-	}
+    public class TestSchema : Schema
+    {
+        public TestSchema()
+        {
+            Query = new TestQuery();
+        }
+    }
 
 	public class SchemaGenerationTests
 	{
@@ -59,7 +60,7 @@ namespace GraphQL.SchemaDeclare.Tests
 
 			schema.Initialize();
 
-			var type = schema.FindType("TestQuery") as ObjectGraphType<object>;
+			var type = schema.AllTypes["TestQuery"] as ObjectGraphType<object>;
 
 			Assert.NotNull(type);
 			Assert.NotEmpty(type.Fields);
@@ -70,9 +71,9 @@ namespace GraphQL.SchemaDeclare.Tests
 			var test = 5;
 			var result = field.Resolver.Resolve(new ResolveFieldContext()
 			{
-				Arguments = new Dictionary<string, object>()
+				Arguments = new Dictionary<string, ArgumentValue>()
 				{
-					{ "test", test }
+					{ "test", new ArgumentValue(test,ArgumentSource.Literal) }
 				}
 			});
 
@@ -87,7 +88,7 @@ namespace GraphQL.SchemaDeclare.Tests
 
 			schema.Initialize();
 
-			var type = schema.FindType("TestQuery") as ObjectGraphType<object>;
+			var type = schema.AllTypes["TestQuery"] as ObjectGraphType<object>;
 
 			Assert.NotNull(type);
 			Assert.NotEmpty(type.Fields);
@@ -98,9 +99,9 @@ namespace GraphQL.SchemaDeclare.Tests
 			var test = 6;
 			var result = ((Task<object>)field.Resolver.Resolve(new ResolveFieldContext()
 			{
-				Arguments = new Dictionary<string, object>()
+				Arguments = new Dictionary<string, ArgumentValue>()
 				{
-					{ "test", test }
+                    { "test", new ArgumentValue(test,ArgumentSource.Literal) }
 				}
 			})).Result;
 
@@ -115,7 +116,7 @@ namespace GraphQL.SchemaDeclare.Tests
 
 			schema.Initialize();
 
-			var type = schema.FindType("TestQuery") as ObjectGraphType<object>;
+            var type = schema.AllTypes["TestQuery"] as ObjectGraphType<object>;
 
 			Assert.NotNull(type);
 			Assert.NotEmpty(type.Fields);
@@ -126,10 +127,10 @@ namespace GraphQL.SchemaDeclare.Tests
 			var test = true;
 			var result = field.Resolver.Resolve(new ResolveFieldContext()
 			{
-				Arguments = new Dictionary<string, object>()
-				{
-					{ "test", test }
-				}
+                Arguments = new Dictionary<string, ArgumentValue>()
+                {
+                    { "test", new ArgumentValue(test,ArgumentSource.Literal) }
+                }
 			});
 
 			var expectedResult = (new Controller()).Boolean(test);
@@ -143,7 +144,7 @@ namespace GraphQL.SchemaDeclare.Tests
 
 			schema.Initialize();
 
-			var type = schema.FindType("TestQuery") as ObjectGraphType<object>;
+            var type = schema.AllTypes["TestQuery"] as ObjectGraphType<object>;
 
 			Assert.NotNull(type);
 			Assert.NotEmpty(type.Fields);

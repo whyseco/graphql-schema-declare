@@ -3,6 +3,7 @@ using GraphQL.SchemaDeclare.Resolvers;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -10,13 +11,31 @@ namespace GraphQL.SchemaDeclare
 {
 	public static class ObjectGraphTypeExtensions
 	{
+		private class EmptySchema : Schema
+		{
+        }
+
 		public static IServiceProvider ServiceProvider { get; set; }
 
 		private static ExpressionToFieldTypeGenerator ExpressionToFieldTypeGenerator { get {
 				if (ServiceProvider is null)
 				{
+					// Hack to fill the mappings with types.
+                    var schema = new EmptySchema();
+                    IEnumerable<(Type clrType, Type graphType)> typeMappings = schema.BuiltInTypeMappings;
+                    var clrToGraphTypeMappings = new ClrToGraphTypeMappings();
+					foreach (var (clrType, graphType) in typeMappings)
+                    {
+                        if (!clrToGraphTypeMappings.ContainsKey(clrType))
+                        {
+                            clrToGraphTypeMappings.Add(clrType, graphType);
+                        }
+                    }
+
 					return new ExpressionToFieldTypeGenerator(
-						new ExpressionToFieldInfoGenerator(new TypeToGraphTypeTransformer(), new TypeToGraphTypeTransformerOptions()),
+						new ExpressionToFieldInfoGenerator(
+                            new TypeToGraphTypeTransformer(clrToGraphTypeMappings), 
+                            new TypeToGraphTypeTransformerOptions()),
 						new FieldInfoToFieldTypeTransformer(),
 						new FieldInfoResolver());
 				}
