@@ -9,7 +9,10 @@ namespace GraphQL.SchemaDeclare
 {
     public static class GraphQLSchemaDeclareServiceExtension
     {
-        public static void AddGraphQLSchemaDeclareService(this IServiceCollection services, Action<TypeToGraphTypeTransformerOptions> setTypeToGraphTypeOptions = null)
+        public static void AddGraphQLSchemaDeclareService(
+            this IServiceCollection services, 
+            Action<TypeToGraphTypeTransformerOptions> setTypeToGraphTypeOptions = null,
+            Func<ClrToGraphTypeMappings> clrToGraphTypeMappingsFactory = null)
         {
             services.AddSingleton<GraphQL.SchemaDeclare.GenerationServices.IExpressionToFieldInfoGenerator,
                     GraphQL.SchemaDeclare.GenerationServices.ExpressionToFieldInfoGenerator>();
@@ -33,6 +36,10 @@ namespace GraphQL.SchemaDeclare
             }
             else
                 services.AddSingleton<GraphQL.SchemaDeclare.GenerationServices.TypeToGraphTypeTransformerOptions>();
+
+            services.AddSingleton(clrToGraphTypeMappingsFactory != null
+                ? clrToGraphTypeMappingsFactory()
+                : new ClrToGraphTypeMappings());
         }
     }
 }

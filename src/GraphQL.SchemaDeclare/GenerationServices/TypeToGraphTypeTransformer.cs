@@ -1,133 +1,171 @@
-﻿using GraphQL.Types;
-using GraphQL.Utilities;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
+using GraphQL.Types;
 
 namespace GraphQL.SchemaDeclare.GenerationServices
 {
-	public class TypeToGraphTypeTransformer : ITypeToGraphTypeTransformer
-	{
-		protected bool IsTypeNullable(Type rootType, Type realType)
-		{
-			var isRootTypeANullable = this.IsNullable(rootType);
-			var isRealTypeNullable = !realType.IsValueType || this.IsNullable(realType);
-			var isNullable = isRootTypeANullable || isRealTypeNullable;
+    /// <summary>
+    /// 
+    /// </summary>
+    public class TypeToGraphTypeTransformer : ITypeToGraphTypeTransformer
+    {
+        private readonly ClrToGraphTypeMappings typeMappings;
 
-			return isNullable;
-		}
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TypeToGraphTypeTransformer"/> class.
+        /// </summary>
+        /// <param name="typeMappings"></param>
+        public TypeToGraphTypeTransformer(ClrToGraphTypeMappings typeMappings)
+        {
+            this.typeMappings = typeMappings;
+        }
 
-		protected bool HasRequiredAttribute(IEnumerable<CustomAttributeData> customAttributes)
-		{
-			return customAttributes.Any(_ => _.AttributeType == typeof(RequiredAttribute));
-		}
+        protected bool IsTypeNullable(Type rootType, Type realType)
+        {
+            var isRootTypeANullable = IsNullable(rootType);
+            var isRealTypeNullable = !realType.IsValueType || IsNullable(realType);
+            var isNullable = isRootTypeANullable || isRealTypeNullable;
 
-		protected bool IsNullable(Type rootType, Type realType, IEnumerable<CustomAttributeData> customAttributes)
-		{
-			var isTypeNullable = this.IsTypeNullable(rootType, realType);
-			var hasRequiredAttribute = this.HasRequiredAttribute(customAttributes);
+            return isNullable;
+        }
 
-			return isTypeNullable && !hasRequiredAttribute;
-		}
+        protected bool HasRequiredAttribute(IEnumerable<CustomAttributeData> customAttributes)
+        {
+            return customAttributes.Any(_ => _.AttributeType == typeof(RequiredAttribute));
+        }
 
-		protected bool IsTypeList(Type type)
-		{
-			return (type.IsGenericType 
-				&&  typeof(IEnumerable).IsAssignableFrom(type.GetGenericTypeDefinition()) 
-				&& type != typeof(string)) 
-				|| type.IsArray;
-		}
+        protected bool IsNullable(Type rootType, Type realType, IEnumerable<CustomAttributeData> customAttributes)
+        {
+            var isTypeNullable = IsTypeNullable(rootType, realType);
+            var hasRequiredAttribute = HasRequiredAttribute(customAttributes);
 
-		protected Type GenerateNonNullGraphType(Type graphType)
-		{
-			if (graphType is null)
-				return null;
-			var gType = typeof(NonNullGraphType<>);
-			Type[] typeArgs = { graphType };
-			var finalType = gType.MakeGenericType(typeArgs);
-			return finalType;
-		}
+            return isTypeNullable && !hasRequiredAttribute;
+        }
 
-		protected Type GetGraphTypeWithNullableInfo(Type rootType, IEnumerable<CustomAttributeData> customAttributes, TypeToGraphTypeTransformerOptions options)
-		{
-			var realType = this.GetRealType(rootType);
-			var graphType = GetGraphTypeFromRealType(realType, options);
+        protected static bool IsTypeList(Type type)
+        {
+            return (type.IsGenericType
+                && typeof(IEnumerable).IsAssignableFrom(type.GetGenericTypeDefinition())
+                && type != typeof(string))
+                || type.IsArray;
+        }
 
-			var isNullable = this.IsNullable(rootType, realType, customAttributes);
+        protected Type GenerateNonNullGraphType(Type graphType)
+        {
+            if (graphType is null)
+            {
+                return null;
+            }
 
-			if (!isNullable)
-				graphType = GenerateNonNullGraphType(graphType);
-			return graphType;
-		}
+            var genericType = typeof(NonNullGraphType<>);
+            Type[] typeArgs = { graphType };
+            var finalType = genericType.MakeGenericType(typeArgs);
+            return finalType;
+        }
 
-		protected Type GetGraphTypeWithoutNullableInfo(Type rootType, TypeToGraphTypeTransformerOptions options)
-		{
-			var realType = this.GetRealType(rootType);
-			var graphType = GetGraphTypeFromRealType(realType, options);
+        protected Type GetGraphTypeWithNullableInfo(Type rootType, IEnumerable<CustomAttributeData> customAttributes, TypeToGraphTypeTransformerOptions options)
+        {
+            var realType = GetRealType(rootType);
+            var graphType = GetGraphTypeFromRealType(realType, options);
 
-			return graphType;
-		}
+            var isNullable = IsNullable(rootType, realType, customAttributes);
 
-		protected bool IsNullable(Type type)
-		{
-			return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
-		}
+            if (!isNullable)
+            {
+                graphType = GenerateNonNullGraphType(graphType);
+            }
 
-		protected Type GetRealType(Type originType)
-		{
-			if (this.IsNullable(originType))
-				originType = originType.GenericTypeArguments.First();
-			if (originType.IsGenericType && originType.GetGenericTypeDefinition() == typeof(Task<>))
-				originType = originType.GenericTypeArguments.First();
+            return graphType;
+        }
 
-			return originType;
-		}
+        protected Type GetGraphTypeWithoutNullableInfo(Type rootType, TypeToGraphTypeTransformerOptions options)
+        {
+            var realType = GetRealType(rootType);
+            var graphType = GetGraphTypeFromRealType(realType, options);
 
-		protected Type GetGraphTypeFromRealType(Type realType, TypeToGraphTypeTransformerOptions options)
-		{
-			var isTypeList = this.IsTypeList(realType);
-			if (isTypeList)
-			{
-				var gType = typeof(ListGraphType<>);
-				var clrType = realType.IsArray ? realType.GetElementType() : realType.GenericTypeArguments.First();
+            return graphType;
+        }
 
-                realType = this.GetRealType(clrType);
+        protected bool IsNullable(Type type)
+        {
+            return type?.IsGenericType == true && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+        }
 
-                var graphType = GraphTypeTypeRegistry.Get(realType);
+        protected Type GetRealType(Type originType)
+        {
+            if (IsNullable(originType))
+            {
+                originType = originType.GenericTypeArguments.First();
+            }
 
-				if (options.AddNullableInfo && !this.IsTypeNullable(clrType, clrType))
-				{
-					graphType = GenerateNonNullGraphType(graphType);
-				}
+            if (originType.IsGenericType && originType.GetGenericTypeDefinition() == typeof(Task<>))
+            {
+                originType = originType.GenericTypeArguments.First();
+            }
 
-				Type[] typeArgs = { graphType };
-				var finalType = gType.MakeGenericType(typeArgs);
-				return finalType;
-			}
+            return originType;
+        }
 
-			if (realType == typeof(DateTime))
-				return typeof(DateTimeGraphType);
-			if (realType.IsEnum)
-			{
-				var gType = typeof(EnumerationGraphType<>);
-				Type[] typeArgs = { realType };
-				var finalType = gType.MakeGenericType(typeArgs);
-				return finalType;
-			}
+        protected Type GetGraphTypeFromRealType(Type realType, TypeToGraphTypeTransformerOptions options)
+        {
+            var isTypeList = IsTypeList(realType);
+            if (isTypeList)
+            {
+                var genericType = typeof(ListGraphType<>);
+                var clrType = realType.IsArray ? realType.GetElementType() : realType.GenericTypeArguments.First();
 
-			return GraphTypeTypeRegistry.Get(realType);
-		}
+                realType = GetRealType(clrType);
 
-		public Type GetGraphType(Type originType, bool hasDefaultValue, IEnumerable<CustomAttributeData> customAttributes, TypeToGraphTypeTransformerOptions options)
-		{
-			if (options.AddNullableInfo && !hasDefaultValue)
-				return this.GetGraphTypeWithNullableInfo(originType, customAttributes, options);
-			return this.GetGraphTypeWithoutNullableInfo(originType, options);
-		}
-	}
+                typeMappings.TryGetValue(realType, out Type graphType);
+
+                if (options.AddNullableInfo && !IsTypeNullable(clrType, clrType))
+                {
+                    graphType = GenerateNonNullGraphType(graphType);
+                }
+
+                Type[] typeArgs = { graphType };
+                var finalType = genericType.MakeGenericType(typeArgs);
+                return finalType;
+            }
+
+            if (realType == typeof(DateTime))
+            {
+                return typeof(DateTimeGraphType);
+            }
+
+            if (realType.IsEnum)
+            {
+                var gType = typeof(EnumerationGraphType<>);
+                Type[] typeArgs = { realType };
+                var finalType = gType.MakeGenericType(typeArgs);
+                return finalType;
+            }
+
+            return typeMappings.ContainsKey(realType) ? typeMappings[realType] : null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="originType"></param>
+        /// <param name="hasDefaultValue"></param>
+        /// <param name="customAttributes"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public Type GetGraphType(
+            Type originType,
+            bool hasDefaultValue,
+            IEnumerable<CustomAttributeData> customAttributes,
+            TypeToGraphTypeTransformerOptions options)
+        {
+            return options.AddNullableInfo && !hasDefaultValue
+                ? GetGraphTypeWithNullableInfo(originType, customAttributes, options)
+                : GetGraphTypeWithoutNullableInfo(originType, options);
+        }
+    }
 }
